@@ -25,8 +25,7 @@ public class HttpServer {
         serverSocketChannel.socket().bind(new InetSocketAddress(8080));
         serverSocketChannel.configureBlocking(false);
 
-        serverSocketChannel.register(threadPool.getNextThread().getSelector(), SelectionKey.OP_ACCEPT);
-        System.out.println("Registered!");
+        threadPool.getNextThread().register(serverSocketChannel, SelectionKey.OP_ACCEPT);
     }
 
     private void shutDown() {
