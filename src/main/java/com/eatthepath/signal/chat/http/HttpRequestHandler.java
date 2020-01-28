@@ -1,5 +1,7 @@
 package com.eatthepath.signal.chat.http;
 
+import java.nio.channels.AsynchronousSocketChannel;
+
 interface HttpRequestHandler {
-    void handleHttpRequest(final HttpRequest request);
+    void handleHttpRequest(HttpRequest request, AsynchronousSocketChannel channel);
 }

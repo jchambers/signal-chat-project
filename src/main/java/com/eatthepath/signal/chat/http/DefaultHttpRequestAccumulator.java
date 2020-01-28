@@ -22,8 +22,8 @@ public class DefaultHttpRequestAccumulator implements HttpRequestAccumulator {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultHttpRequestAccumulator.class);
 
-    DefaultHttpRequestAccumulator() {
-        this(new DefaultHttpRequestHandler(), new DefaultHttpRequestParser());
+    DefaultHttpRequestAccumulator(final HttpRequestHandler requestHandler) {
+        this(requestHandler, new DefaultHttpRequestParser());
     }
 
     // Visible for testing
@@ -55,7 +55,7 @@ public class DefaultHttpRequestAccumulator implements HttpRequestAccumulator {
                     // Clear out the accumulation buffer now that we have a complete request
                     accumulationBuffersByChannel.remove(channel);
 
-                    requestHandler.handleHttpRequest(request);
+                    requestHandler.handleHttpRequest(request, channel);
                 } catch (final IncompleteHttpRequestException e) {
                     // Keep waiting for more data
                     accumulateHttpRequest(channel);

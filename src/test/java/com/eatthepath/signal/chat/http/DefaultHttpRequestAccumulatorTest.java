@@ -55,7 +55,7 @@ class DefaultHttpRequestAccumulatorTest {
 
         accumulator.accumulateHttpRequest(channel);
 
-        verify(handler).handleHttpRequest(request);
+        verify(handler).handleHttpRequest(request, channel);
     }
 
     @Test
@@ -76,6 +76,6 @@ class DefaultHttpRequestAccumulatorTest {
         });
 
         accumulator.accumulateHttpRequest(channel);
-        verify(handler).handleHttpRequest(request);
+        verify(handler).handleHttpRequest(request, channel);
     }
 }
