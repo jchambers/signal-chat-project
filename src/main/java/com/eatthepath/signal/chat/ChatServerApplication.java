@@ -7,7 +7,7 @@ import java.io.IOException;
 public class ChatServerApplication {
 
     public static void main(final String... args) throws IOException {
-        final HttpServer httpServer = new HttpServer();
+        final HttpServer httpServer = new HttpServer(80);
         httpServer.start();
     }
 }
