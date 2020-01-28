@@ -39,6 +39,8 @@ public class DefaultHttpRequestAccumulator implements HttpRequestAccumulator {
         channel.read(buffer, null, new CompletionHandler<Integer, Void>() {
             @Override
             public void completed(final Integer bytesRead, final Void attachment) {
+                buffer.flip();
+
                 accumulationBuffersByChannel.merge(channel, buffer, (existingBuffer, newBuffer) -> {
                     final ByteBuffer combinedBuffer = ByteBuffer.allocate(existingBuffer.limit() + newBuffer.limit());
                     combinedBuffer.put(existingBuffer);

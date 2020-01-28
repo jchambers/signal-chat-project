@@ -23,11 +23,15 @@ class DefaultHttpRequestParser implements HttpRequestParser {
         // This is memory-inefficient and GC-heavy, but it's pretty quick to implement. Given a 4-6 hour window to put
         // together an HTTP server, this is a case where I'll flag that there's lots of room for improvement and plan
         // to revisit it later.
-        final byte[] requestBytes = new byte[buffer.position()];
-        buffer.rewind();
+        final byte[] requestBytes = new byte[buffer.limit()];
         buffer.get(requestBytes);
 
         final String requestString = new String(requestBytes);
+
+        // We need at least one line (the request line). Bail our early if we haven't made it that far.
+        if (!requestString.contains("\r\n")) {
+            throw new IncompleteHttpRequestException();
+        }
 
         try (final BufferedReader reader = new BufferedReader(new StringReader(requestString))) {
             final HttpRequestMethod requestMethod;
@@ -101,9 +105,8 @@ class DefaultHttpRequestParser implements HttpRequestParser {
 
                 final char[] bodyChars = new char[contentLength];
 
-                //noinspection ResultOfMethodCallIgnored
-                reader.read(bodyChars);
-                requestBody = new String(bodyChars);
+                final int charsRead = reader.read(bodyChars);
+                requestBody = new String(bodyChars, 0, charsRead);
 
                 if (requestBody.getBytes().length != contentLength) {
                     throw new IncompleteHttpRequestException();
