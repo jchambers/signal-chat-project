@@ -1,6 +1,7 @@
 package com.eatthepath.signal.exercise.model;
 
 import java.time.Instant;
+import java.util.Objects;
 
 public class Message {
     private final String id;
@@ -37,5 +38,33 @@ public class Message {
 
     public long getDestinationUserId() {
         return destinationUserId;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        final Message message1 = (Message) o;
+        return sourceUserId == message1.sourceUserId &&
+                destinationUserId == message1.destinationUserId &&
+                Objects.equals(id, message1.id) &&
+                Objects.equals(timestamp, message1.timestamp) &&
+                Objects.equals(message, message1.message);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, timestamp, message, sourceUserId, destinationUserId);
+    }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "id='" + id + '\'' +
+                ", timestamp=" + timestamp +
+                ", message='" + message + '\'' +
+                ", sourceUserId=" + sourceUserId +
+                ", destinationUserId=" + destinationUserId +
+                '}';
     }
 }
