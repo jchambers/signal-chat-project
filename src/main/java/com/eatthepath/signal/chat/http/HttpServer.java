@@ -15,17 +15,23 @@ public class HttpServer {
 
     private final int port;
 
+    private final HttpRequestAccumulator requestAccumulator;
+
     private final AsynchronousChannelGroup channelGroup;
     private final AsynchronousServerSocketChannel serverSocketChannel;
-
-    private final ConcurrentMap<Channel, ByteBuffer> accumulationBuffersByChannel = new ConcurrentHashMap<>();
-
-    private static final int DEFAULT_BUFFER_SIZE = 4096;
 
     private static final Logger log = LoggerFactory.getLogger(HttpServer.class);
 
     public HttpServer(final int port) throws IOException {
+        this(port, new DefaultHttpRequestAccumulator());
+    }
+
+    // Visible for testing
+    HttpServer(final int port,
+               final HttpRequestAccumulator requestAccumulator) throws IOException {
+
         this.port = port;
+        this.requestAccumulator = requestAccumulator;
 
         channelGroup = AsynchronousChannelGroup.withFixedThreadPool(4, Executors.defaultThreadFactory());
         serverSocketChannel = AsynchronousServerSocketChannel.open();
@@ -38,11 +44,9 @@ public class HttpServer {
 
             @Override
             public void completed(final AsynchronousSocketChannel channel, final Void attachment) {
-                log.debug("Bound channel: {}", channel);
+                log.trace("Accepted channel: {}", channel);
 
-                // TODO Read message
-                accumulateHttpMessage(channel);
-                // TODO Respond to message
+                requestAccumulator.accumulateHttpRequest(channel);
 
                 // Accept the next incoming channel
                 serverSocketChannel.accept(null, this);
@@ -50,40 +54,7 @@ public class HttpServer {
 
             @Override
             public void failed(final Throwable throwable, final Void attachment) {
-                log.error("Failed to bind channel", throwable);
-            }
-        });
-    }
-
-    private void accumulateHttpMessage(final AsynchronousSocketChannel channel) {
-        /* final ByteBuffer accumulationBuffer = accumulationBuffersByChannel.computeIfAbsent(
-                channel, key -> ByteBuffer.allocate(DEFAULT_BUFFER_SIZE)); */
-
-        final ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
-
-        channel.read(buffer, null, new CompletionHandler<Integer, Void>() {
-            @Override
-            public void completed(final Integer bytesRead, final Void attachment) {
-                accumulationBuffersByChannel.merge(channel, buffer, (existingBuffer, newBuffer) -> {
-                    final ByteBuffer combinedBuffer = ByteBuffer.allocate(existingBuffer.position() + newBuffer.position());
-                    combinedBuffer.put(existingBuffer);
-                    combinedBuffer.put(newBuffer);
-
-                    return combinedBuffer;
-                });
-
-                // TODO See if we have a complete HTTP message
-            }
-
-            @Override
-            public void failed(final Throwable throwable, final Void attachment) {
-                log.error("Failed to read from channel", throwable);
-
-                try {
-                    channel.close();
-                } catch (final IOException e) {
-                    log.error("Failed to close channel after a read failure", e);
-                }
+                log.error("Failed to accept channel", throwable);
             }
         });
     }
