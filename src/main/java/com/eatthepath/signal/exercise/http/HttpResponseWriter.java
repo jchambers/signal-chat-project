@@ -1,6 +1,8 @@
 package com.eatthepath.signal.exercise.http;
 
+import java.nio.channels.AsynchronousSocketChannel;
+
 public interface HttpResponseWriter {
 
-    void writeResponse(HttpResponseCode responseCode, Object responseObject);
+    void writeResponse(AsynchronousSocketChannel channel, HttpResponseCode responseCode, Object responseObject);
 }

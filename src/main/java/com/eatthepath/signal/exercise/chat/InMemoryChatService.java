@@ -3,6 +3,8 @@ package com.eatthepath.signal.exercise.chat;
 import com.eatthepath.signal.exercise.contacts.ContactService;
 import com.eatthepath.signal.exercise.model.Chat;
 import com.eatthepath.signal.exercise.model.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,6 +21,8 @@ public class InMemoryChatService implements ChatService {
 
     private static final Comparator<Message> MESSAGE_TIMESTAMP_COMPARATOR =
             Comparator.comparing(Message::getTimestamp);
+
+    private static final Logger log = LoggerFactory.getLogger(InMemoryChatService.class);
 
     public InMemoryChatService(final ContactService contactService) {
         this.contactService = contactService;
@@ -44,6 +48,8 @@ public class InMemoryChatService implements ChatService {
 
         chatsByUserId.computeIfAbsent(participantIds[0], (userId) -> new ArrayList<>()).add(chat);
         chatsByUserId.computeIfAbsent(participantIds[1], (userId) -> new ArrayList<>()).add(chat);
+
+        log.debug("Created {}", chat);
     }
 
     @Override
@@ -62,6 +68,8 @@ public class InMemoryChatService implements ChatService {
 
         messagesByChat.computeIfAbsent(chat, (key) -> new ConcurrentSkipListSet<>(MESSAGE_TIMESTAMP_COMPARATOR))
                 .add(message);
+
+        log.debug("Added message {} to chat {}", message.getId(), chat.getId());
     }
 
     @Override

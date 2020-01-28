@@ -1,6 +1,7 @@
 package com.eatthepath.signal.exercise.http;
 
 import com.eatthepath.signal.exercise.controller.Controller;
+import com.eatthepath.signal.exercise.model.ErrorMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +77,7 @@ public class HttpServer implements HttpRequestHandler {
         channelGroup.shutdown();
     }
 
-    void registerController(final Controller controller) {
+    public void registerController(final Controller controller) {
         controllers.add(controller);
     }
 
@@ -84,13 +85,15 @@ public class HttpServer implements HttpRequestHandler {
     public void handleHttpRequest(final HttpRequest request, final AsynchronousSocketChannel channel) {
         boolean handled = false;
 
+        System.out.println(request);
+
         for (final Controller controller : controllers) {
             if (controller.canHandlePath(request.getPath())) {
                 if (controller.canHandleRequestMethod(request.getRequestMethod())) {
                     controller.handleRequest(request, channel, responseWriter);
                 } else {
-                    responseWriter.writeResponse(HttpResponseCode.METHOD_NOT_ALLOWED,
-                            new Error("Controller at path does not support " + request.getRequestMethod()));
+                    responseWriter.writeResponse(channel, HttpResponseCode.METHOD_NOT_ALLOWED,
+                            new ErrorMessage("Controller at path does not support " + request.getRequestMethod()));
                 }
 
                 handled = true;
@@ -99,7 +102,7 @@ public class HttpServer implements HttpRequestHandler {
         }
 
         if (!handled) {
-            responseWriter.writeResponse(HttpResponseCode.NOT_FOUND, new Error("No controller found for given path"));
+            responseWriter.writeResponse(channel, HttpResponseCode.NOT_FOUND, new ErrorMessage("No controller found for given path"));
         }
     }
 }

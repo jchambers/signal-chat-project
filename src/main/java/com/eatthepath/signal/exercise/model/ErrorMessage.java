@@ -1,10 +1,10 @@
 package com.eatthepath.signal.exercise.model;
 
-public class Error {
+public class ErrorMessage {
 
     private final String error;
 
-    public Error(final String error) {
+    public ErrorMessage(final String error) {
         this.error = error;
     }
 
