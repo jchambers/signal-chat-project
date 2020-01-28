@@ -51,4 +51,15 @@ class DefaultHttpRequest implements HttpRequest {
     public Optional<String> getRequestBody() {
         return Optional.ofNullable(body);
     }
+
+    @Override
+    public String toString() {
+        return "DefaultHttpRequest{" +
+                "requestMethod=" + requestMethod +
+                ", path='" + path + '\'' +
+                ", httpVersion='" + httpVersion + '\'' +
+                ", headers=" + headers +
+                ", body='" + body + '\'' +
+                '}';
+    }
 }

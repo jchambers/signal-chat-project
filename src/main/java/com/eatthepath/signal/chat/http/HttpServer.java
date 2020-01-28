@@ -23,7 +23,7 @@ public class HttpServer {
     private static final Logger log = LoggerFactory.getLogger(HttpServer.class);
 
     public HttpServer(final int port) throws IOException {
-        this(port, new DefaultHttpRequestAccumulator());
+        this(port, new DefaultHttpRequestAccumulator(new DefaultHttpRequestHandler()));
     }
 
     // Visible for testing

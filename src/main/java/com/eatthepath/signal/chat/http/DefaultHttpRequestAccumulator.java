@@ -10,7 +10,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.Channel;
 import java.nio.channels.CompletionHandler;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +21,8 @@ public class DefaultHttpRequestAccumulator implements HttpRequestAccumulator {
 
     private final ConcurrentMap<Channel, ByteBuffer> accumulationBuffersByChannel = new ConcurrentHashMap<>();
 
+    private final HttpRequestHandler requestHandler;
+
     private static final int DEFAULT_BUFFER_SIZE = 4096;
 
     private static final Pattern REQUEST_LINE_PATTERN = Pattern.compile("^([a-zA-Z]+) ([^\\s]+) (HTTP/.+)$");
@@ -31,6 +32,10 @@ public class DefaultHttpRequestAccumulator implements HttpRequestAccumulator {
     private static class IncompleteHttpRequestException extends Exception {}
 
     private static class InvalidHttpRequestException extends Exception {}
+
+    DefaultHttpRequestAccumulator(final HttpRequestHandler requestHandler) {
+        this.requestHandler = requestHandler;
+    }
 
     @Override
     public void accumulateHttpRequest(final AsynchronousSocketChannel channel) {
@@ -48,11 +53,16 @@ public class DefaultHttpRequestAccumulator implements HttpRequestAccumulator {
                 });
 
                 try {
-                    extractHttpRequest(accumulationBuffersByChannel.get(channel));
+                    final HttpRequest request = extractHttpRequest(accumulationBuffersByChannel.get(channel));
+
+                    // Clear out the accumulation buffer now that we have a complete request
+                    accumulationBuffersByChannel.remove(channel);
+
+                    requestHandler.handleHttpRequest(request);
                 } catch (final IncompleteHttpRequestException e) {
                     // Keep waiting for more data
                     accumulateHttpRequest(channel);
-                } catch (InvalidHttpRequestException e) {
+                } catch (final InvalidHttpRequestException e) {
                     // TODO
                     e.printStackTrace();
                 }
@@ -110,23 +120,62 @@ public class DefaultHttpRequestAccumulator implements HttpRequestAccumulator {
             final Map<String, String> headers = new HashMap<>();
             {
                 String line = reader.readLine();
+                boolean foundEmptyLine = false;
 
-                while (line != null && line.length() > 0) {
-                    final String[] headerPieces = line.split(":", 2);
+                while (line != null) {
+                    if (line.length() == 0) {
+                        foundEmptyLine = true;
+                        break;
+                    } else {
+                        final String[] headerPieces = line.split(":", 2);
 
-                    if (headerPieces.length != 2) {
-                        throw new InvalidHttpRequestException();
+                        if (headerPieces.length != 2) {
+                            throw new InvalidHttpRequestException();
+                        }
+
+                        headers.put(headerPieces[0], headerPieces[1].trim());
+
+                        line = reader.readLine();
                     }
+                }
 
-                    headers.put(headerPieces[0], headerPieces[1].trim());
-
-                    line = reader.readLine();
+                if (!foundEmptyLine) {
+                    // The data available to us ends before the end of the header block
+                    throw new IncompleteHttpRequestException();
                 }
             }
 
-            // TODO Parse message body
+            final String requestBody;
 
-            return new DefaultHttpRequest(requestMethod, path, httpVersion, headers, null);
+            if (requestMethod == HttpRequestMethod.POST) {
+                // We need to read/parse the request body
+                if (!headers.containsKey("Content-Length")) {
+                    throw new InvalidHttpRequestException();
+                }
+
+                final int contentLength;
+
+                try {
+                    contentLength = Integer.parseInt(headers.get("Content-Length"), 10);
+                } catch (final NumberFormatException e) {
+                    // TODO Add this as the cause for the invalid request exception
+                    throw new InvalidHttpRequestException();
+                }
+
+                final char[] bodyChars = new char[contentLength];
+
+                //noinspection ResultOfMethodCallIgnored
+                reader.read(bodyChars);
+                requestBody = new String(bodyChars);
+
+                if (requestBody.getBytes().length != contentLength) {
+                    throw new IncompleteHttpRequestException();
+                }
+            } else {
+                requestBody = null;
+            }
+
+            return new DefaultHttpRequest(requestMethod, path, httpVersion, headers, requestBody);
         } catch (final IOException e) {
             // This should never happen for string readers
             log.error("Exception while reading request string", e);
