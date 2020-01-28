@@ -5,10 +5,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.nio.channels.AsynchronousChannelGroup;
+import java.nio.channels.AsynchronousServerSocketChannel;
+import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.CompletionHandler;
 import java.util.concurrent.Executors;
 
 public class HttpServer {
@@ -23,7 +23,7 @@ public class HttpServer {
     private static final Logger log = LoggerFactory.getLogger(HttpServer.class);
 
     public HttpServer(final int port) throws IOException {
-        this(port, new DefaultHttpRequestAccumulator(new DefaultHttpRequestHandler()));
+        this(port, new DefaultHttpRequestAccumulator());
     }
 
     // Visible for testing
