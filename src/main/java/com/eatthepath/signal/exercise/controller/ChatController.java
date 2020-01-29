@@ -2,7 +2,7 @@ package com.eatthepath.signal.exercise.controller;
 
 import com.eatthepath.signal.exercise.chat.ChatAlreadyExistsException;
 import com.eatthepath.signal.exercise.chat.ChatService;
-import com.eatthepath.signal.exercise.chat.IllegalUserCountException;
+import com.eatthepath.signal.exercise.chat.IllegalParticipantCountException;
 import com.eatthepath.signal.exercise.chat.UsersAreNotMutualContactsException;
 import com.eatthepath.signal.exercise.http.HttpRequest;
 import com.eatthepath.signal.exercise.http.HttpRequestMethod;
@@ -18,6 +18,9 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * The chat controller is responsible for handling requests to create and list chat sessions.
+ */
 public class ChatController implements Controller {
 
     private final ChatService chatService;
@@ -68,7 +71,7 @@ public class ChatController implements Controller {
             responseWriter.writeResponse(channel, HttpResponseCode.FORBIDDEN, new ErrorMessage("Users in chat request are not mutual contacts."));
         } catch (final ChatAlreadyExistsException e) {
             responseWriter.writeResponse(channel, HttpResponseCode.CONFLICT, new ErrorMessage("Chat already exists"));
-        } catch (final IllegalUserCountException e) {
+        } catch (final IllegalParticipantCountException e) {
             responseWriter.writeResponse(channel, HttpResponseCode.BAD_REQUEST, new ErrorMessage("Chat requests must contain exactly two user IDs"));
         }
     }

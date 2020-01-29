@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * The message controller is responsible for handling requests to add messages to a chat session and retrieve messages
+ * associated with an existing session.
+ */
 public class MessageController implements Controller {
 
     private final ChatService chatService;

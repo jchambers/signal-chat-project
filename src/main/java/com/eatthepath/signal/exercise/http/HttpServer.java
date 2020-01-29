@@ -16,6 +16,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
 
+/**
+ * An HTTP server listens for new connections, reads HTTP requests, and routes them to appropriate {@link Controller}
+ * instances. This HTTP server reserves persistent resources on construction, and must be shut down via its
+ * {@link #close()} method to release those resources.
+ */
 public class HttpServer implements HttpRequestHandler, AutoCloseable {
 
     private final int port;
@@ -31,10 +36,25 @@ public class HttpServer implements HttpRequestHandler, AutoCloseable {
 
     private static final Logger log = LoggerFactory.getLogger(HttpServer.class);
 
+    /**
+     * Constructs a new HTTP server that listens for new connections on the given port and creates an IO thread pool of
+     * a default size.
+     *
+     * @param port the port on which to listen for incoming connections
+     * @throws IOException if the server could not create IO threads or bind to the given port for any reason
+     */
     public HttpServer(final int port) throws IOException {
         this(port, Runtime.getRuntime().availableProcessors());
     }
 
+    /**
+     * Constructs a new HTTP server that listens for new connections on the given port and creates an IO thread pool of
+     * the given size.
+     *
+     * @param port the port on which to listen for incoming connections
+     * @param threadCount the number of threads to include in this server's IO thread pool
+     * @throws IOException if the server could not create IO threads or bind to the given port for any reason
+     */
     public HttpServer(final int port, final int threadCount) throws IOException {
         this(port, threadCount, null, new DefaultHttpResponseWriter());
     }
@@ -58,6 +78,11 @@ public class HttpServer implements HttpRequestHandler, AutoCloseable {
         serverSocketChannel = AsynchronousServerSocketChannel.open();
     }
 
+    /**
+     * Starts listening for new connections and serving requests.
+     *
+     * @throws IOException if the server could not bind to its port for any reason
+     */
     public void start() throws IOException {
         serverSocketChannel.bind(new InetSocketAddress(port));
 
@@ -82,12 +107,22 @@ public class HttpServer implements HttpRequestHandler, AutoCloseable {
         log.info("Started server on port {} with {} IO threads.", port, threadCount);
     }
 
+    /**
+     * Shuts down the server and releases persistent resources.
+     */
     @Override
     public void close() {
         log.info("Shutting down.");
         channelGroup.shutdown();
     }
 
+    /**
+     * Registers a new controller with this server. When a request reaches the server, the server will check its
+     * registered controllers to find one that can handle the request. If multiple controllers could handle the same
+     * requests, the controller that will actually handle the request is undefined.
+     *
+     * @param controller the controller to add to this server
+     */
     public void registerController(final Controller controller) {
         controllers.add(controller);
     }

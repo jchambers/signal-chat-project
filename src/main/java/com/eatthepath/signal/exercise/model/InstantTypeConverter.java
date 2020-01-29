@@ -5,6 +5,9 @@ import com.google.gson.*;
 import java.lang.reflect.Type;
 import java.time.Instant;
 
+/**
+ * A type converter that allows GSON to serialize and deserialize {@link Instant} instances as {@code long} values.
+ */
 public class InstantTypeConverter implements JsonSerializer<Instant>, JsonDeserializer<Instant> {
 
     @Override

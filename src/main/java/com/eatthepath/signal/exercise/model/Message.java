@@ -3,6 +3,9 @@ package com.eatthepath.signal.exercise.model;
 import java.time.Instant;
 import java.util.Objects;
 
+/**
+ * A {@code Message} instance represents a message sent as part of a chat session.
+ */
 public class Message {
     private final String id;
     private final Instant timestamp;
@@ -12,6 +15,15 @@ public class Message {
     private final long sourceUserId;
     private final long destinationUserId;
 
+    /**
+     * Creates a new message.
+     *
+     * @param id the ID of the message
+     * @param timestamp the time at which the message was created
+     * @param message the content of the message
+     * @param sourceUserId the ID of the user who sent the message
+     * @param destinationUserId the ID of the user to whom the message was sent
+     */
     public Message(final String id, final Instant timestamp, final String message, final long sourceUserId, final long destinationUserId) {
         this.id = id;
         this.timestamp = timestamp;
@@ -20,22 +32,48 @@ public class Message {
         this.destinationUserId = destinationUserId;
     }
 
+    /**
+     * Returns the ID of this message.
+     *
+     * @return the ID of this message
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Returns the time at which this message was created. Note that this may be distinct from the time it was received
+     * by the server or transmitted to its destination.
+     *
+     * @return the time at which this message was created
+     */
     public Instant getTimestamp() {
         return timestamp;
     }
 
+    /**
+     * Returns the content of the message.
+     *
+     * @return the content of the message
+     */
     public String getMessage() {
         return message;
     }
 
+    /**
+     * Returns the ID of the user who sent this message.
+     *
+     * @return the ID of the user who sent this message
+     */
     public long getSourceUserId() {
         return sourceUserId;
     }
 
+    /**
+     * Returns the ID of the user who received this message.
+     *
+     * @return the ID of the user who received this message.
+     */
     public long getDestinationUserId() {
         return destinationUserId;
     }

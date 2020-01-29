@@ -1,5 +1,10 @@
 package com.eatthepath.signal.exercise.http;
 
+/**
+ * An enumeration of HTTP response codes.
+ *
+ * @see <a href="https://tools.ietf.org/html/rfc2616#section-6.1.1">RFC 2616: Hypertext Transfer Protocol -- HTTP/1.1, Section 6.1.1 - Status Code and Reason Phrase</a>
+ */
 public enum HttpResponseCode {
     OKAY(200, "OK"),
     CREATED(201, "Created"),

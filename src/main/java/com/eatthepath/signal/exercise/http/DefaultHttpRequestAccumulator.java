@@ -11,7 +11,7 @@ import java.nio.channels.CompletionHandler;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public class DefaultHttpRequestAccumulator implements HttpRequestAccumulator {
+class DefaultHttpRequestAccumulator implements HttpRequestAccumulator {
 
     private final ConcurrentMap<Channel, ByteBuffer> accumulationBuffersByChannel = new ConcurrentHashMap<>();
 

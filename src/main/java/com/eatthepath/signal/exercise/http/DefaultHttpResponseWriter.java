@@ -9,7 +9,7 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
-public class DefaultHttpResponseWriter implements HttpResponseWriter {
+class DefaultHttpResponseWriter implements HttpResponseWriter {
 
     private static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(Instant.class, new InstantTypeConverter())

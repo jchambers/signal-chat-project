@@ -10,6 +10,10 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+/**
+ * A chat service implementation that stores chat sessions and messages in memory. As a consequence, when the
+ * application stops, all sessions and messages are discarded and cannot be recovered.
+ */
 public class InMemoryChatService implements ChatService {
 
     private final ContactService contactService;
@@ -29,11 +33,11 @@ public class InMemoryChatService implements ChatService {
     }
 
     @Override
-    public void createChat(final Chat chat) throws UsersAreNotMutualContactsException, ChatAlreadyExistsException, IllegalUserCountException {
+    public void createChat(final Chat chat) throws UsersAreNotMutualContactsException, ChatAlreadyExistsException, IllegalParticipantCountException {
         final List<Long> participantIds = chat.getParticipantIds();
 
         if (participantIds.size() != 2) {
-            throw new IllegalUserCountException();
+            throw new IllegalParticipantCountException();
         }
 
         if (!contactService.usersAreMutualContacts(participantIds.get(0), participantIds.get(1))) {

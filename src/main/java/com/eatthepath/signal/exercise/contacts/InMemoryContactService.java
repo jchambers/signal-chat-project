@@ -10,6 +10,9 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * A contact service implementation that stores users' contact lists in memory.
+ */
 public class InMemoryContactService implements ContactService {
 
     private final Map<Long, Set<Long>> contactsByUserId;

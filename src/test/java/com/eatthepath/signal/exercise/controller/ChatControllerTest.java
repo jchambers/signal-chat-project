@@ -2,7 +2,7 @@ package com.eatthepath.signal.exercise.controller;
 
 import com.eatthepath.signal.exercise.chat.ChatAlreadyExistsException;
 import com.eatthepath.signal.exercise.chat.ChatService;
-import com.eatthepath.signal.exercise.chat.IllegalUserCountException;
+import com.eatthepath.signal.exercise.chat.IllegalParticipantCountException;
 import com.eatthepath.signal.exercise.chat.UsersAreNotMutualContactsException;
 import com.eatthepath.signal.exercise.http.HttpRequest;
 import com.eatthepath.signal.exercise.http.HttpRequestMethod;
@@ -10,7 +10,6 @@ import com.eatthepath.signal.exercise.http.HttpResponseCode;
 import com.eatthepath.signal.exercise.http.HttpResponseWriter;
 import com.eatthepath.signal.exercise.model.Chat;
 import com.eatthepath.signal.exercise.model.ErrorMessage;
-import com.eatthepath.signal.exercise.model.Message;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -106,7 +105,7 @@ class ChatControllerTest {
         chatController.handleCreateChatRequest(chat, channel, responseWriter);
         verify(responseWriter).writeResponse(eq(channel), eq(HttpResponseCode.CONFLICT), any(ErrorMessage.class));
 
-        doThrow(new IllegalUserCountException()).when(chatService).createChat(chat);
+        doThrow(new IllegalParticipantCountException()).when(chatService).createChat(chat);
 
         chatController.handleCreateChatRequest(chat, channel, responseWriter);
         verify(responseWriter).writeResponse(eq(channel), eq(HttpResponseCode.BAD_REQUEST), any(ErrorMessage.class));
