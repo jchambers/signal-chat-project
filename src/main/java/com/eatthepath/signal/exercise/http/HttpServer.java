@@ -19,6 +19,7 @@ import java.util.concurrent.Executors;
 public class HttpServer implements HttpRequestHandler {
 
     private final int port;
+    private final int threadCount;
 
     private final HttpRequestAccumulator requestAccumulator;
     private final HttpResponseWriter responseWriter;
@@ -31,15 +32,21 @@ public class HttpServer implements HttpRequestHandler {
     private static final Logger log = LoggerFactory.getLogger(HttpServer.class);
 
     public HttpServer(final int port) throws IOException {
-        this(port, null, new DefaultHttpResponseWriter());
+        this(port, Runtime.getRuntime().availableProcessors());
+    }
+
+    public HttpServer(final int port, final int threadCount) throws IOException {
+        this(port, threadCount, null, new DefaultHttpResponseWriter());
     }
 
     // Visible for testing
     HttpServer(final int port,
+               final int threadCount,
                final HttpRequestAccumulator requestAccumulator,
                final HttpResponseWriter responseWriter) throws IOException {
 
         this.port = port;
+        this.threadCount = threadCount;
 
         // This is pretty gross, but it's a hacky way to resolve "can't reference this before calling supertype
         // constructor" issues.
@@ -47,7 +54,7 @@ public class HttpServer implements HttpRequestHandler {
 
         this.responseWriter = responseWriter;
 
-        channelGroup = AsynchronousChannelGroup.withFixedThreadPool(4, Executors.defaultThreadFactory());
+        channelGroup = AsynchronousChannelGroup.withFixedThreadPool(threadCount, Executors.defaultThreadFactory());
         serverSocketChannel = AsynchronousServerSocketChannel.open();
     }
 
@@ -71,9 +78,12 @@ public class HttpServer implements HttpRequestHandler {
                 log.error("Failed to accept channel", throwable);
             }
         });
+
+        log.info("Started server on port {} with {} IO threads.", port, threadCount);
     }
 
     private void shutDown() {
+        log.info("Shutting down.");
         channelGroup.shutdown();
     }
 
