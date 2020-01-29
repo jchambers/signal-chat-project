@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
 
-public class HttpServer implements HttpRequestHandler {
+public class HttpServer implements HttpRequestHandler, AutoCloseable {
 
     private final int port;
     private final int threadCount;
@@ -82,7 +82,8 @@ public class HttpServer implements HttpRequestHandler {
         log.info("Started server on port {} with {} IO threads.", port, threadCount);
     }
 
-    private void shutDown() {
+    @Override
+    public void close() {
         log.info("Shutting down.");
         channelGroup.shutdown();
     }
