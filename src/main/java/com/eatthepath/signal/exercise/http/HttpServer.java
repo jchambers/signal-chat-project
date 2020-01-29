@@ -83,20 +83,15 @@ public class HttpServer implements HttpRequestHandler {
 
     @Override
     public void handleHttpRequest(final HttpRequest request, final AsynchronousSocketChannel channel) {
-        boolean handled = false;
+        log.debug("Received request: {} {}", request.getRequestMethod(), request.getPath());
 
-        System.out.println(request);
+        boolean handled = false;
 
         for (final Controller controller : controllers) {
             if (controller.canHandlePath(request.getPath())) {
-                if (controller.canHandleRequestMethod(request.getRequestMethod())) {
-                    controller.handleRequest(request, channel, responseWriter);
-                } else {
-                    responseWriter.writeResponse(channel, HttpResponseCode.METHOD_NOT_ALLOWED,
-                            new ErrorMessage("Controller at path does not support " + request.getRequestMethod()));
-                }
-
+                controller.handleRequest(request, channel, responseWriter);
                 handled = true;
+
                 break;
             }
         }

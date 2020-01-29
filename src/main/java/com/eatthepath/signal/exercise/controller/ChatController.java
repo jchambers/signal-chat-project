@@ -36,11 +36,6 @@ public class ChatController implements Controller {
     }
 
     @Override
-    public boolean canHandleRequestMethod(final HttpRequestMethod requestMethod) {
-        return requestMethod == HttpRequestMethod.GET || requestMethod == HttpRequestMethod.POST;
-    }
-
-    @Override
     public void handleRequest(final HttpRequest request, final AsynchronousSocketChannel channel, final HttpResponseWriter responseWriter) {
         if (request.getRequestMethod() == HttpRequestMethod.GET) {
             final Matcher pathMatcher = CHAT_PATH_PATTERN.matcher(request.getPath());
@@ -61,7 +56,7 @@ public class ChatController implements Controller {
                 responseWriter.writeResponse(channel, HttpResponseCode.BAD_REQUEST, new ErrorMessage("Could not parse request body as a chat object."));
             }
         } else {
-            // TODO
+            responseWriter.writeResponse(channel, HttpResponseCode.METHOD_NOT_ALLOWED, new ErrorMessage("Unsupported request method"));
         }
     }
 

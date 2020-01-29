@@ -10,7 +10,5 @@ public interface Controller {
 
     boolean canHandlePath(String path);
 
-    boolean canHandleRequestMethod(HttpRequestMethod requestMethod);
-
     void handleRequest(HttpRequest request, AsynchronousSocketChannel channel, HttpResponseWriter responseWriter);
 }

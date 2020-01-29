@@ -40,11 +40,6 @@ public class MessageController implements Controller {
     }
 
     @Override
-    public boolean canHandleRequestMethod(final HttpRequestMethod requestMethod) {
-        return requestMethod == HttpRequestMethod.GET || requestMethod == HttpRequestMethod.POST;
-    }
-
-    @Override
     public void handleRequest(final HttpRequest request, final AsynchronousSocketChannel channel, final HttpResponseWriter responseWriter) {
         final long chatId;
         {
@@ -68,8 +63,10 @@ public class MessageController implements Controller {
                 responseWriter.writeResponse(channel, HttpResponseCode.BAD_REQUEST,
                         new ErrorMessage("Could not parse request body as a message"));
             }
-        } else {
+        } else if (request.getRequestMethod() == HttpRequestMethod.GET) {
             handleListMessagesRequest(chatId, channel, responseWriter);
+        } else {
+            responseWriter.writeResponse(channel, HttpResponseCode.METHOD_NOT_ALLOWED, new ErrorMessage("Unsupported request method"));
         }
     }
 

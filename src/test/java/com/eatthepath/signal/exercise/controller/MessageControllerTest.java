@@ -54,17 +54,6 @@ class MessageControllerTest {
                 arguments("/chats?userId=12", false));
     }
 
-    @ParameterizedTest
-    @MethodSource("canHandleRequestMethodSource")
-    void canHandleRequestMethod(final HttpRequestMethod requestMethod, final boolean expectCanHandle) {
-        assertEquals(expectCanHandle, messageController.canHandleRequestMethod(requestMethod));
-    }
-
-    private static Stream<Arguments> canHandleRequestMethodSource() {
-        return Stream.of(arguments(HttpRequestMethod.GET, true),
-                arguments(HttpRequestMethod.POST, true));
-    }
-
     @Test
     void handleRequest() {
         final HttpRequest request = mock(HttpRequest.class);
@@ -76,8 +65,12 @@ class MessageControllerTest {
         final HttpResponseWriter responseWriter = mock(HttpResponseWriter.class);
 
         messageController.handleRequest(request, channel, responseWriter);
-
         verify(responseWriter).writeResponse(eq(channel), eq(HttpResponseCode.BAD_REQUEST), any(ErrorMessage.class));
+
+        when(request.getRequestMethod()).thenReturn(HttpRequestMethod.DELETE);
+
+        messageController.handleRequest(request, channel, responseWriter);
+        verify(responseWriter).writeResponse(eq(channel), eq(HttpResponseCode.METHOD_NOT_ALLOWED), any(ErrorMessage.class));
     }
 
     @Test
