@@ -4,7 +4,7 @@ import com.eatthepath.signal.exercise.chat.ChatService;
 import com.eatthepath.signal.exercise.chat.InMemoryChatService;
 import com.eatthepath.signal.exercise.contacts.ContactService;
 import com.eatthepath.signal.exercise.contacts.InMemoryContactService;
-import com.eatthepath.signal.exercise.controller.CreateChatController;
+import com.eatthepath.signal.exercise.controller.ChatController;
 import com.eatthepath.signal.exercise.controller.MessageController;
 import com.eatthepath.signal.exercise.http.HttpServer;
 
@@ -16,11 +16,11 @@ public class ChatServerApplication {
         final ContactService contactService = new InMemoryContactService();
         final ChatService chatService = new InMemoryChatService(contactService);
 
-        final CreateChatController createChatController = new CreateChatController(chatService);
+        final ChatController chatController = new ChatController(chatService);
         final MessageController messageController = new MessageController(chatService);
 
         final HttpServer httpServer = new HttpServer(80);
-        httpServer.registerController(createChatController);
+        httpServer.registerController(chatController);
         httpServer.registerController(messageController);
         httpServer.start();
     }
