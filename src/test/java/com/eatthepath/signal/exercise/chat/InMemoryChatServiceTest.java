@@ -34,7 +34,7 @@ class InMemoryChatServiceTest {
 
     @Test
     void createChat() throws Exception {
-        final Chat chat = new Chat(1, new long[] {1, 2});
+        final Chat chat = new Chat(1, Arrays.asList(1L, 2L));
 
         when(contactService.usersAreMutualContacts(anyLong(), anyLong())).thenReturn(false);
         assertThrows(UsersAreNotMutualContactsException.class, () -> chatService.createChat(chat));
@@ -49,7 +49,7 @@ class InMemoryChatServiceTest {
     void getChatsForUser() throws Exception {
         assertTrue(chatService.getChatsForUser(1).isEmpty());
 
-        final Chat chat = new Chat(1, new long[] {1, 2});
+        final Chat chat = new Chat(1, Arrays.asList(1L, 2L));
 
         when(contactService.usersAreMutualContacts(anyLong(), anyLong())).thenReturn(true);
         chatService.createChat(chat);
@@ -62,19 +62,17 @@ class InMemoryChatServiceTest {
 
     @Test
     void postMessage() throws Exception {
+        final Chat chat = new Chat(1, Arrays.asList(1L, 2L));
         when(contactService.usersAreMutualContacts(anyLong(), anyLong())).thenReturn(true);
 
         {
             final Message message = new Message("test-message-id", Instant.now(), "This is only a test", 1, 2);
 
-            assertThrows(ChatNotFoundException.class, () -> chatService.postMessage(message));
-
-            final Chat chat = new Chat(1, new long[]{1, 2});
-
+            assertThrows(ChatNotFoundException.class, () -> chatService.postMessage(chat.getId(), message));
             assertThrows(ChatNotFoundException.class, () -> chatService.getMessagesForChat(chat.getId()));
 
             chatService.createChat(chat);
-            chatService.postMessage(message);
+            chatService.postMessage(chat.getId(), message);
 
             final List<Message> expectedMessages = Collections.singletonList(message);
 
@@ -85,13 +83,13 @@ class InMemoryChatServiceTest {
             final Message messageToOneUnknownUser =
                     new Message("one-unknown-user", Instant.now(), "This is only a test", 1, 3);
 
-            assertThrows(ChatNotFoundException.class, () -> chatService.postMessage(messageToOneUnknownUser));
+            assertThrows(IllegalMessageParticipantException.class, () -> chatService.postMessage(chat.getId(), messageToOneUnknownUser));
         }
     }
 
     @Test
     void getMessagesForChat() throws Exception {
-        final Chat chat = new Chat(1, new long[]{1, 2});
+        final Chat chat = new Chat(1, Arrays.asList(1L, 2L));
 
         when(contactService.usersAreMutualContacts(anyLong(), anyLong())).thenReturn(true);
         chatService.createChat(chat);
@@ -101,8 +99,8 @@ class InMemoryChatServiceTest {
         final Message earlierMessage = new Message("earlier", now.minusMillis(1000), "This message was sent first, but arrived second", 1, 2);
         final Message laterMessage = new Message("later", now, "This message was sent second, but arrived first", 1, 2);
 
-        chatService.postMessage(laterMessage);
-        chatService.postMessage(earlierMessage);
+        chatService.postMessage(chat.getId(), laterMessage);
+        chatService.postMessage(chat.getId(), earlierMessage);
 
         final List<Message> expectedMessages = Arrays.asList(earlierMessage, laterMessage);
 

@@ -1,13 +1,13 @@
 package com.eatthepath.signal.exercise.model;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 public class Chat {
     private final long id;
-    private final long[] participantIds;
+    private final List<Long> participantIds;
 
-    public Chat(final long id, final long[] participantIds) {
+    public Chat(final long id, final List<Long> participantIds) {
         this.id = id;
         this.participantIds = participantIds;
     }
@@ -16,7 +16,7 @@ public class Chat {
         return id;
     }
 
-    public long[] getParticipantIds() {
+    public List<Long> getParticipantIds() {
         return participantIds;
     }
 
@@ -26,21 +26,19 @@ public class Chat {
         if (o == null || getClass() != o.getClass()) return false;
         final Chat chat = (Chat) o;
         return id == chat.id &&
-                Arrays.equals(participantIds, chat.participantIds);
+                Objects.equals(participantIds, chat.participantIds);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(id);
-        result = 31 * result + Arrays.hashCode(participantIds);
-        return result;
+        return Objects.hash(id, participantIds);
     }
 
     @Override
     public String toString() {
         return "Chat{" +
                 "id=" + id +
-                ", participantIds=" + Arrays.toString(participantIds) +
+                ", participantIds=" + participantIds +
                 '}';
     }
 }

@@ -20,7 +20,7 @@ public class CreateChatController implements Controller {
 
     private final ChatService chatService;
 
-    private final Gson gson = new GsonBuilder().create();
+    private static final Gson GSON = new GsonBuilder().create();
 
     public CreateChatController(final ChatService chatService) {
         this.chatService = chatService;
@@ -39,7 +39,7 @@ public class CreateChatController implements Controller {
     @Override
     public void handleRequest(final HttpRequest request, final AsynchronousSocketChannel channel, final HttpResponseWriter responseWriter) {
         try {
-            final Chat chat = request.getRequestBody().map(body -> gson.fromJson(body, Chat.class))
+            final Chat chat = request.getRequestBody().map(body -> GSON.fromJson(body, Chat.class))
                     .orElseThrow(() -> new JsonParseException("Could not parse request body as a chat object."));
 
             try {

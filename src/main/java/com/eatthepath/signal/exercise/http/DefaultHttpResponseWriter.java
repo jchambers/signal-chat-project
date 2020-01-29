@@ -15,31 +15,32 @@ public class DefaultHttpResponseWriter implements HttpResponseWriter {
             .registerTypeAdapter(Instant.class, new InstantTypeConverter())
             .create();
 
-    private static final int DEFAULT_BUFFER_SIZE = 2048;
+    private static final int DEFAULT_HEADER_BUFFER_SIZE = 1024;
 
     @Override
     public void writeResponse(final AsynchronousSocketChannel channel, final HttpResponseCode responseCode, final Object responseObject) {
-        final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(DEFAULT_BUFFER_SIZE);
-        responseBuffer.put(String.format("HTTP/1.1 %d %s\r\n", responseCode.getStatusCode(), responseCode.getMessage()).getBytes(StandardCharsets.UTF_8));
+        final ByteBuffer headerBuffer = ByteBuffer.allocateDirect(DEFAULT_HEADER_BUFFER_SIZE);
+        headerBuffer.put(String.format("HTTP/1.1 %d %s\r\n", responseCode.getStatusCode(), responseCode.getMessage()).getBytes(StandardCharsets.UTF_8));
 
-        writeHeader(responseBuffer, "Connection", "close");
+        writeHeader(headerBuffer, "Connection", "close");
 
-        final byte[] bodyBytes = responseObject != null
-                ? GSON.toJson(responseObject).getBytes(StandardCharsets.UTF_8)
-                : null;
+        final ByteBuffer bodyBuffer;
+        {
+            final byte[] bodyBytes = responseObject != null
+                    ? GSON.toJson(responseObject).getBytes(StandardCharsets.UTF_8)
+                    : new byte[0];
 
-        writeHeader(responseBuffer, "Content-Type", "application/json; charset=utf-8");
-        writeHeader(responseBuffer, "Content-Length", String.valueOf(bodyBytes != null ? bodyBytes.length : 0));
-
-        responseBuffer.put("\r\n".getBytes(StandardCharsets.UTF_8));
-
-        if (bodyBytes != null) {
-            responseBuffer.put(bodyBytes);
+            bodyBuffer = ByteBuffer.wrap(bodyBytes);
         }
 
-        responseBuffer.flip();
+        writeHeader(headerBuffer, "Content-Type", "application/json; charset=utf-8");
+        writeHeader(headerBuffer, "Content-Length", String.valueOf(bodyBuffer.limit()));
 
-        channel.write(responseBuffer);
+        headerBuffer.put("\r\n".getBytes(StandardCharsets.UTF_8));
+
+        headerBuffer.flip();
+        channel.write(headerBuffer);
+        channel.write(bodyBuffer);
     }
 
     private static void writeHeader(final ByteBuffer buffer, final String key, final String value) {

@@ -11,7 +11,7 @@ public interface ChatService {
 
     List<Chat> getChatsForUser(long userId);
 
-    void postMessage(Message message) throws ChatNotFoundException;
+    void postMessage(long chatId, Message message) throws ChatNotFoundException, IllegalMessageParticipantException;
 
     List<Message> getMessagesForChat(long chatId) throws ChatNotFoundException;
 }

@@ -30,14 +30,14 @@ public class InMemoryChatService implements ChatService {
 
     @Override
     public void createChat(final Chat chat) throws UsersAreNotMutualContactsException, ChatAlreadyExistsException, IllegalUserCountException {
-        final long[] participantIds = chat.getParticipantIds();
+        final List<Long> participantIds = chat.getParticipantIds();
 
-        if (participantIds.length != 2) {
+        if (participantIds.size() != 2) {
             throw new IllegalUserCountException();
         }
 
-        if (!contactService.usersAreMutualContacts(participantIds[0], participantIds[1])) {
-            throw new UsersAreNotMutualContactsException(participantIds[0], participantIds[1]);
+        if (!contactService.usersAreMutualContacts(participantIds.get(0), participantIds.get(1))) {
+            throw new UsersAreNotMutualContactsException(participantIds.get(0), participantIds.get(1));
         }
 
         if (chatsById.containsKey(chat.getId())) {
@@ -46,8 +46,8 @@ public class InMemoryChatService implements ChatService {
 
         chatsById.put(chat.getId(), chat);
 
-        chatsByUserId.computeIfAbsent(participantIds[0], (userId) -> new ArrayList<>()).add(chat);
-        chatsByUserId.computeIfAbsent(participantIds[1], (userId) -> new ArrayList<>()).add(chat);
+        chatsByUserId.computeIfAbsent(participantIds.get(0), (userId) -> new ArrayList<>()).add(chat);
+        chatsByUserId.computeIfAbsent(participantIds.get(1), (userId) -> new ArrayList<>()).add(chat);
 
         log.debug("Created {}", chat);
     }
@@ -58,13 +58,16 @@ public class InMemoryChatService implements ChatService {
     }
 
     @Override
-    public void postMessage(final Message message) throws ChatNotFoundException {
-        final Chat chat = chatsByUserId.getOrDefault(message.getSourceUserId(), Collections.emptyList())
-                .stream()
-                .filter(candidate -> candidate.getParticipantIds()[0] == message.getDestinationUserId() ||
-                        candidate.getParticipantIds()[1] == message.getDestinationUserId())
-                .findFirst()
-                .orElseThrow(() -> new ChatNotFoundException(message.getSourceUserId(), message.getDestinationUserId()));
+    public void postMessage(final long chatId, final Message message) throws ChatNotFoundException, IllegalMessageParticipantException {
+        if (!chatsById.containsKey(chatId)) {
+            throw new ChatNotFoundException(chatId);
+        }
+
+        final Chat chat = chatsById.get(chatId);
+
+        if (!chat.getParticipantIds().contains(message.getSourceUserId()) || !chat.getParticipantIds().contains(message.getDestinationUserId())) {
+            throw new IllegalMessageParticipantException();
+        }
 
         messagesByChat.computeIfAbsent(chat, (key) -> new ConcurrentSkipListSet<>(MESSAGE_TIMESTAMP_COMPARATOR))
                 .add(message);
