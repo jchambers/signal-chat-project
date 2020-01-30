@@ -1,5 +1,6 @@
 package com.eatthepath.signal.exercise.http;
 
+import com.eatthepath.signal.exercise.model.ErrorMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -22,6 +23,9 @@ class DefaultHttpRequestAccumulatorTest {
     private HttpRequestParser parser;
 
     @Mock
+    private HttpResponseWriter responseWriter;
+
+    @Mock
     private HttpRequestHandler handler;
 
     private AsynchronousSocketChannel channel;
@@ -37,9 +41,12 @@ class DefaultHttpRequestAccumulatorTest {
 
         channel = mock(AsynchronousSocketChannel.class);
 
+        //noinspection unchecked
         doAnswer(invocation -> {
             final ByteBuffer byteBuffer = invocation.getArgument(0, ByteBuffer.class);
             byteBuffer.put(BUFFER_CONTENTS.getBytes());
+
+            //noinspection unchecked
             invocation.getArgument(2, CompletionHandler.class).completed(BUFFER_CONTENTS.getBytes().length, null);
 
             return null;
@@ -75,5 +82,14 @@ class DefaultHttpRequestAccumulatorTest {
 
         accumulator.accumulateHttpRequest(channel);
         verify(handler).handleHttpRequest(request, channel);
+    }
+
+    @Test
+    void accumulateHttpRequestBadRequest() throws Exception {
+        when(parser.parseHttpRequest(any(ByteBuffer.class))).thenThrow(new InvalidHttpRequestException("OH NO"));
+
+        accumulator.accumulateHttpRequest(channel);
+
+        verify(responseWriter).writeResponse(eq(channel), eq(HttpResponseCode.BAD_REQUEST), any(ErrorMessage.class));
     }
 }

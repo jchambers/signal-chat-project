@@ -1,5 +1,6 @@
 package com.eatthepath.signal.exercise.http;
 
+import com.eatthepath.signal.exercise.model.ErrorMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +17,7 @@ class DefaultHttpRequestAccumulator implements HttpRequestAccumulator {
     private final ConcurrentMap<Channel, ByteBuffer> accumulationBuffersByChannel = new ConcurrentHashMap<>();
 
     private final HttpRequestParser requestParser;
+    private final HttpResponseWriter responseWriter;
     private final HttpRequestHandler requestHandler;
 
     private static final int DEFAULT_BUFFER_SIZE = 4096;
@@ -23,12 +25,13 @@ class DefaultHttpRequestAccumulator implements HttpRequestAccumulator {
     private static final Logger log = LoggerFactory.getLogger(DefaultHttpRequestAccumulator.class);
 
     DefaultHttpRequestAccumulator(final HttpRequestHandler requestHandler) {
-        this(requestHandler, new DefaultHttpRequestParser());
+        this(requestHandler, new DefaultHttpResponseWriter(), new DefaultHttpRequestParser());
     }
 
     // Visible for testing
-    DefaultHttpRequestAccumulator(final HttpRequestHandler requestHandler, final HttpRequestParser requestParser) {
+    DefaultHttpRequestAccumulator(final HttpRequestHandler requestHandler, final HttpResponseWriter responseWriter, final HttpRequestParser requestParser) {
         this.requestHandler = requestHandler;
+        this.responseWriter = responseWriter;
         this.requestParser = requestParser;
     }
 
@@ -60,8 +63,8 @@ class DefaultHttpRequestAccumulator implements HttpRequestAccumulator {
                     // Keep waiting for more data
                     accumulateHttpRequest(channel);
                 } catch (final InvalidHttpRequestException e) {
-                    // TODO
-                    e.printStackTrace();
+                    log.debug("Received invalid HTTP request", e);
+                    responseWriter.writeResponse(channel, HttpResponseCode.BAD_REQUEST, new ErrorMessage("Could not parse HTTP request"));
                 }
             }
 

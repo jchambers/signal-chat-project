@@ -54,7 +54,10 @@ class DefaultHttpRequestParser implements HttpRequestParser {
 
                     httpVersion = requestLineMatcher.group(3);
                 } else {
-                    throw new InvalidHttpRequestException();
+                    // We know we have a complete request line because we checked for a CRLF earlier; that means that
+                    // if the pattern doesn't match, the request line is bogus and won't be remedied by getting more
+                    // data.
+                    throw new InvalidHttpRequestException("Invalid request line");
                 }
             }
 
@@ -71,7 +74,7 @@ class DefaultHttpRequestParser implements HttpRequestParser {
                         final String[] headerPieces = line.split(":", 2);
 
                         if (headerPieces.length != 2) {
-                            throw new InvalidHttpRequestException();
+                            throw new InvalidHttpRequestException("Malformed header line: " + line);
                         }
 
                         headers.put(headerPieces[0], headerPieces[1].trim());
@@ -91,7 +94,7 @@ class DefaultHttpRequestParser implements HttpRequestParser {
             if (requestMethod == HttpRequestMethod.POST) {
                 // We need to read/parse the request body
                 if (!headers.containsKey("Content-Length")) {
-                    throw new InvalidHttpRequestException();
+                    throw new InvalidHttpRequestException("No Content-Length specified for request with expected response body");
                 }
 
                 final int contentLength;
@@ -99,8 +102,7 @@ class DefaultHttpRequestParser implements HttpRequestParser {
                 try {
                     contentLength = Integer.parseInt(headers.get("Content-Length"), 10);
                 } catch (final NumberFormatException e) {
-                    // TODO Add this as the cause for the invalid request exception
-                    throw new InvalidHttpRequestException();
+                    throw new InvalidHttpRequestException(e);
                 }
 
                 final char[] bodyChars = new char[contentLength];
@@ -121,6 +123,6 @@ class DefaultHttpRequestParser implements HttpRequestParser {
             log.error("Exception while reading request string", e);
         }
 
-        throw new InvalidHttpRequestException();
+        throw new InvalidHttpRequestException("Unexpected error processing HTTP request");
     }
 }
