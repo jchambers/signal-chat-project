@@ -3,11 +3,16 @@ package com.eatthepath.signal.exercise.http;
 import com.eatthepath.signal.exercise.model.InstantTypeConverter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.CompletionHandler;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.concurrent.TimeUnit;
 
 class DefaultHttpResponseWriter implements HttpResponseWriter {
 
@@ -16,6 +21,8 @@ class DefaultHttpResponseWriter implements HttpResponseWriter {
             .create();
 
     private static final int DEFAULT_HEADER_BUFFER_SIZE = 1024;
+
+    private static final Logger log = LoggerFactory.getLogger(DefaultHttpResponseWriter.class);
 
     @Override
     public void writeResponse(final AsynchronousSocketChannel channel, final HttpResponseCode responseCode, final Object responseObject) {
@@ -37,10 +44,29 @@ class DefaultHttpResponseWriter implements HttpResponseWriter {
         writeHeader(headerBuffer, "Content-Length", String.valueOf(bodyBuffer.limit()));
 
         headerBuffer.put("\r\n".getBytes(StandardCharsets.UTF_8));
-
         headerBuffer.flip();
-        channel.write(headerBuffer);
-        channel.write(bodyBuffer);
+
+        channel.write(new ByteBuffer[] {headerBuffer, bodyBuffer}, 0, 2, 1, TimeUnit.SECONDS, null,
+                new CompletionHandler<Long, Void>() {
+                    @Override
+                    public void completed(final Long result, final Void attachment) {
+                        closeChannel();
+                    }
+
+                    @Override
+                    public void failed(final Throwable throwable, final Void attachment) {
+                        log.warn("Failed to write response", throwable);
+                        closeChannel();
+                    }
+
+                    private void closeChannel() {
+                        try {
+                            channel.close();
+                        } catch (final IOException e) {
+                            log.error("Failed to close channel after sending reply.");
+                        }
+                    }
+                });
     }
 
     private static void writeHeader(final ByteBuffer buffer, final String key, final String value) {
