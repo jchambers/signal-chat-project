@@ -26,7 +26,7 @@ class DefaultHttpResponseWriter implements HttpResponseWriter {
 
     @Override
     public void writeResponse(final AsynchronousSocketChannel channel, final HttpResponseCode responseCode, final Object responseObject) {
-        final ByteBuffer headerBuffer = ByteBuffer.allocateDirect(DEFAULT_HEADER_BUFFER_SIZE);
+        final ByteBuffer headerBuffer = ByteBuffer.allocate(DEFAULT_HEADER_BUFFER_SIZE);
         headerBuffer.put(String.format("HTTP/1.1 %d %s\r\n", responseCode.getStatusCode(), responseCode.getMessage()).getBytes(StandardCharsets.UTF_8));
 
         writeHeader(headerBuffer, "Connection", "close");
