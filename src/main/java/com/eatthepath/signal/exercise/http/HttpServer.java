@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * An HTTP server listens for new connections, reads HTTP requests, and routes them to appropriate {@link Controller}
@@ -35,6 +37,16 @@ public class HttpServer implements HttpRequestHandler, AutoCloseable {
     private final List<Controller> controllers = Collections.synchronizedList(new ArrayList<>());
 
     private static final Logger log = LoggerFactory.getLogger(HttpServer.class);
+
+    private static class IOThreadFactory implements ThreadFactory {
+
+        private final AtomicInteger threadCounter = new AtomicInteger(1);
+
+        @Override
+        public Thread newThread(final Runnable runnable) {
+            return new Thread(runnable, "IOThread-" + threadCounter.getAndIncrement());
+        }
+    }
 
     /**
      * Constructs a new HTTP server that listens for new connections on the given port and creates an IO thread pool of
@@ -74,7 +86,7 @@ public class HttpServer implements HttpRequestHandler, AutoCloseable {
 
         this.responseWriter = responseWriter;
 
-        channelGroup = AsynchronousChannelGroup.withFixedThreadPool(threadCount, Executors.defaultThreadFactory());
+        channelGroup = AsynchronousChannelGroup.withFixedThreadPool(threadCount, new IOThreadFactory());
         serverSocketChannel = AsynchronousServerSocketChannel.open();
     }
 
