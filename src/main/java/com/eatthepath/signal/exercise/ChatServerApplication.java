@@ -10,6 +10,9 @@ import com.eatthepath.signal.exercise.http.HttpServer;
 
 import java.io.IOException;
 
+/**
+ * A simple application that constructs and starts an HTTP server that handles chat REST API requests.
+ */
 public class ChatServerApplication {
 
     public static void main(final String... args) throws IOException {
