@@ -52,7 +52,7 @@ $ ab -c1 -n10000 http://localhost/chats?userId=1
 $ ab -c1 -n10000 http://localhost/chats?userId=1
 ```
 
-…then the second `ab` run will complete as expected. After checking a number of likely suspects, I've concluded that whatever is going on here is either really subtle or really embarrassing. Either way, I've left it out of scope for now.
+…then the second `ab` run will complete as expected. After checking a number of likely suspects, I've concluded that whatever is going on here is either really subtle or really embarrassing. Either way, I've left it out of scope for now (though I'm pretty sure it's an issue with releasing direct `ByteBuffer` instances, which The Internet™ seems to agree is an area of lots of strife and ugly solutions).
 
 # Notes on time
 
